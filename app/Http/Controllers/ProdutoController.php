@@ -5,9 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Produto;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View; // CORRIGIDO
-use Illuminate\Http\Response; // CORRIGIDO
-use App\Http\Controllers\Controller; // Adicione esta linha, se não estiver usando o Controller base
+use Illuminate\View\View; 
+use App\Http\Controllers\Controller; // Mantenha esta linha se estiver no Laravel 9 ou inferior
 
 class ProdutoController extends Controller
 {
@@ -18,11 +17,12 @@ class ProdutoController extends Controller
      */
     public function index(): View
     {
+        // Paginando 5 produtos por página
         $produtos = Produto::latest()->paginate(5);
 
-        // CORRIGIDO: Adicionado o ponto e vírgula (;) no final.
+        // O with('i', ...) é para a contagem do índice na view ({{ ++$i }}).
         return view('produtos.index', compact('produtos'))
-                             ->with('i', (request()->input('page', 1) - 1) * 5);
+                            ->with('i', (request()->input('page', 1) - 1) * 5);
     }
 
     /**
@@ -32,7 +32,6 @@ class ProdutoController extends Controller
      */
     public function create(): View
     {
-        // CORRIGIDO: Deve ser 'produtos.create', não 'produtos.html'
         return view('produtos.create'); 
     }
 
@@ -44,20 +43,20 @@ class ProdutoController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // 1. Validação dos dados (garantindo que não seja vazio)
         $request->validate([
             'descricao' => 'required',
-            'qtd' => 'required',
-            // CORRIGIDO: 'requerid' -> 'required'
-            'precoUnitario' => 'required', 
-            // CORRIGIDO: 'requered' -> 'required'
-            'precoVenda' => 'required', 
+            'qtd' => 'required|numeric|min:0', 
+            'precoUnitario' => 'required|numeric|min:0', 
+            'precoVenda' => 'required|numeric|min:0', 
         ]);
         
+        // 2. Criação do produto no banco
         Produto::create($request->all());
         
-        // CORRIGIDO: 'refresh' -> 'route' e 'sucess' -> 'success'
+        // 3. Redireciona com mensagem de sucesso
         return redirect()->route('produtos.index') 
-                         ->with('success', 'Produto criado com sucesso.');
+                             ->with('success', 'Produto criado com sucesso.');
     }
 
     /**
@@ -91,18 +90,20 @@ class ProdutoController extends Controller
      */
     public function update(Request $request, Produto $produto): RedirectResponse
     {
+        // 1. Validação dos dados (adicionando regras 'numeric' e 'min:0' para segurança)
         $request->validate([
             'descricao' => 'required',
-            'qtd' => 'required',
-            'precoVenda' => 'required',
-            'precoUnitario' => 'required',
+            'qtd' => 'required|numeric|min:0',
+            'precoUnitario' => 'required|numeric|min:0',
+            'precoVenda' => 'required|numeric|min:0',
         ]);
         
+        // 2. Atualização do produto no banco
         $produto->update($request->all());
         
-        // CORRIGIDO: Adicionado '>' e corrigido 'sucesso'/'success'
+        // 3. Redireciona com mensagem de sucesso
         return redirect()->route('produtos.index') 
-                         ->with('success', 'Produto atualizado com sucesso.');
+                             ->with('success', 'Produto atualizado com sucesso.');
     }
 
     /**
@@ -113,10 +114,11 @@ class ProdutoController extends Controller
      */
     public function destroy(Produto $produto): RedirectResponse
     {
+        // 1. Exclusão do produto
         $produto->delete();
         
-        // CORRIGIDO: Adicionado '>' e corrigido 'sucesso'/'success'
+        // 2. Redireciona com mensagem de sucesso
         return redirect()->route('produtos.index') 
-                         ->with('success', 'Produto excluído com sucesso.');
+                             ->with('success', 'Produto excluído com sucesso.');
     }
 }
